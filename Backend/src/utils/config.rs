@@ -1,20 +1,17 @@
-use serde::Deserialize;
+use std::env;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Config {
     pub port: u16,
-    pub database_url: String,
 }
 
 impl Config {
-    pub fn from_env() -> Result<Self, std::env::VarError> {
-        dotenvy::dotenv().ok();
-        Ok(Config {
-            port: std::env::var("PORT")
-                .unwrap_or_else(|_| "3000".to_string())
-                .parse()
-                .unwrap(),
-            database_url: std::env::var("DATABASE_URL")?,
-        })
+    pub fn from_env() -> Result<Self, Box<dyn std::error::Error>> {
+        let port = env::var("PORT")
+            .map(|val| val.parse::<u16>())
+            .unwrap_or(Ok(3000)) // Default to 3000 if PORT is unset
+            .map_err(|e| format!("Invalid PORT value: {}", e))?;
+
+        Ok(Config { port })
     }
 }
